@@ -1,4 +1,4 @@
-# Solomon Vesting Contracts
+# Solomon Vesting Contract
 
 Vesting contract for Solomon development and team token pools.
 
@@ -20,10 +20,10 @@ extending the overal vesting duration.
 
 1. Deploy an ERC20 token. The resulting contract address is referred to below as TokenAddress
 2. Compile and deploy SolomonVesting with initial parameters:
-  1. _token: TokenAddress
-  2. _beneficiary: address to receive vested tokens
-  3. _period: Time between vesting releases in seconds
-  4. _installments: Number of vesting releases
+  - _token: TokenAddress
+  - _beneficiary: address to receive vested tokens
+  - _period: Time between vesting releases in seconds
+  - _installments: Number of vesting releases
 3. Approve tokens for use by the vesting contract
 4. Call SolomonVesting.initializeFrom(provider)
-  1. provider is the wallet that sent tokens for vesting
+  - provider is the wallet that sent tokens for vesting
