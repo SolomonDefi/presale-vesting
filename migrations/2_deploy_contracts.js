@@ -13,6 +13,9 @@ module.exports = async function(deployer, network, accounts) {
     teamAddress,
     marketingAddress,
     marketingInstallments,
+    postSaleAddress,
+    postSaleInstallments,
+    postSalePeriod,
   } = constants;
   let tokenAddress;
   let deployAddress = devAddress;
@@ -21,6 +24,9 @@ module.exports = async function(deployer, network, accounts) {
     await deployer.deploy(SlmToken, 'SlmToken', 'SLM', supply, accounts[0], { from: accounts[0] });
     tokenAddress = SlmToken.address;
     deployAddress = accounts[2];
+    await deployer.deploy(
+      SolomonVesting, tokenAddress, deployAddress, period, installments, { from: accounts[1] },
+    );
   } else if(network.startsWith('ropsten')) {
     tokenAddress = '0x98e399c372df175978911456Af44FA26104428D5';
   } else if(network.startsWith('mainnet')) {
@@ -28,19 +34,18 @@ module.exports = async function(deployer, network, accounts) {
   } else {
     return;
   }
-  /*
-  await deployer.deploy(
-    SolomonVesting, tokenAddress, deployAddress, period, installments, { from: accounts[1] },
-  );
-  */
+
   if(network.startsWith('ropsten') || network.startsWith('mainnet')) {
     /*
     await deployer.deploy(
       SolomonVesting, tokenAddress, teamAddress, period, installments, { from: accounts[1] },
     );
-    */
     await deployer.deploy(
       SolomonVesting, tokenAddress, marketingAddress, period, marketingInstallments, { from: accounts[1] },
+    );
+    */
+    await deployer.deploy(
+      SolomonVesting, tokenAddress, postSaleAddress, postSalePeriod, postSaleInstallments, { from: accounts[1] },
     );
   }
 };

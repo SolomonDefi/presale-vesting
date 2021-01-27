@@ -17,6 +17,9 @@ const {
   teamVesting,
   marketingVesting,
   marketingInstallments,
+  postSaleVesting,
+  postSaleInstallments,
+  postSalePeriod,
 } = require('./util.js')(web3);
 
 const delta = toBN(50);
@@ -44,7 +47,7 @@ async function verifyRelease(token, vestingContract, targetAddress, amount) {
 }
 
 contract('TestSolomonVesting', async function(accounts) {
-    const [tokenOwner, vestingOwner, devAddress, teamAddress, marketingAddress] = accounts;
+    const [tokenOwner, vestingOwner, devAddress, teamAddress, marketingAddress, postSaleAddress] = accounts;
 
   it('sets up dev vesting', async () => {
     const token = await SlmToken.deployed();
@@ -172,5 +175,33 @@ contract('TestSolomonVesting', async function(accounts) {
 
     await assertBalance(token, marketingAddress, marketingVestBN, 'Marketing should have all tokens');
     await assertBalance(token, marketingContract.address, '0', 'Marketing vesting should be empty');
+  });
+
+  it('Deploys and vests single period contract', async () => {
+    const token = await SlmToken.deployed();
+    const postSaleContract = await SolomonVesting.new(
+      token.address, postSaleAddress, postSalePeriod, postSaleInstallments, { from: accounts[1] },
+    );
+    const postSaleVestBN = toBN(postSaleVesting);
+    await token.transfer(postSaleAddress, postSaleVestBN, { from: tokenOwner });
+    await assertBalance(token, postSaleAddress, postSaleVestBN, 'PostSale should have tokens');
+
+    // Approve vesting tokens and initialize vesting contract
+    await token.approve(postSaleContract.address, postSaleVestBN, { from: postSaleAddress });
+    await postSaleContract.initializeFrom(postSaleAddress, { from: vestingOwner });
+    await assertBalance(token, postSaleAddress, 0, 'Tokens should be vested');
+    await assertBalance(
+      token, postSaleContract.address, postSaleVestBN, 'Vesting contract missing tokens',
+    );
+
+    await increaseTime((postSalePeriod / 2) + 1);
+    await verifyAvailable(postSaleContract, toBN('0'), 'PostSale available should be 0');
+
+    await increaseTime((postSalePeriod / 2) + 1);
+    await verifyAvailable(postSaleContract, postSaleVestBN, 'PostSale available incorrect');
+    await verifyRelease(token, postSaleContract, postSaleAddress, postSaleVestBN);
+
+    await assertBalance(token, postSaleAddress, postSaleVestBN, 'PostSale should have all tokens');
+    await assertBalance(token, postSaleContract.address, '0', 'PostSale vesting should be empty');
   });
 });
